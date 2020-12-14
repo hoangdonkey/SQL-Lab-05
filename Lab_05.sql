@@ -1,0 +1,87 @@
+USE master
+GO
+
+IF EXISTS(SELECT * FROM sys.databases WHERE NAME = 'Lab05')
+	DROP DATABASE Lab05
+GO
+
+CREATE DATABASE Lab05
+GO
+USE Lab05
+GO
+
+CREATE TABLE PhongBan
+(	MaPB VARCHAR(7),
+	TenPB NVARCHAR(50),
+	CONSTRAINT pk_mapb PRIMARY KEY (MaPB))
+GO
+
+CREATE TABLE NhanVien
+(	MaNV VARCHAR(7),
+	TenNV NVARCHAR(50),
+	NgaySinh DATETIME,
+	SoCMND CHAR(9),
+	GioiTinh CHAR DEFAULT ('M'),
+	DiaChi NVARCHAR	(100),
+	NgayVaoLam DATETIME,
+	MaPB VARCHAR(7),
+	CONSTRAINT pk_manv PRIMARY KEY (MaNV),
+	CONSTRAINT chk_ngaysinh CHECK (NgaySinh < GETDATE()),
+	CONSTRAINT chk_soCMND CHECK (ISNUMERIC (SoCMND) = 1),
+	CONSTRAINT chk_gioitinh CHECK (GioiTinh = 'M' OR GioiTinh = 'F'),
+	CONSTRAINT chk_datein CHECK (DATEDIFF(YEAR,NgaySinh,NgayVaoLam) >= 20),
+	CONSTRAINT fk_mapb FOREIGN KEY (MaPB) REFERENCES PhongBan(MaPB)
+)
+
+CREATE TABLE LuongDA (
+	MaDA varchar(8),
+	MaNV varchar(7),
+	NgayNhan datetime NOT NULL default(getdate()),
+	SoTien money,
+	CONSTRAINT pk_DANV PRIMARY KEY (MaDA,MaNV),
+	CONSTRAINT fk_manv FOREIGN KEY (MaNV) REFERENCES NhanVien(MaNV),
+	CONSTRAINT chk_luongDA CHECK (SoTien > 0)
+)
+
+INSERT INTO PhongBan VALUES
+	('00000A1','Phong A'),
+	('00000A2','Phong B'),
+	('00000A3','Phong C'),
+	('00000A4','Phong D'),
+	('00000A5','Phong E')
+GO
+
+INSERT INTO NhanVien VALUES
+	('000000A','Nguyen Van A','11/01/1990','000000001','M','Ha Noi','09/10/2020','00000A1'),
+	('000000B','Nguyen Van B','11/02/1991','000000002','F','Ha Noi','09/11/2020','00000A2'),
+	('000000C','Nguyen Van C','11/03/1992','000000003','M','Ha Noi','09/12/2020','00000A3'),
+	('000000D','Nguyen Van D','11/04/1993','000000004','F','Ha Noi','09/13/2020','00000A4'),
+	('000000E','Nguyen Van E','11/05/1994','000000005','M','Ha Noi','09/14/2020','00000A5')
+GO
+
+INSERT INTO LuongDA VALUES
+	('00000001','000000A',getdate(),1000000),
+	('00000002','000000B',getdate(),2000000),
+	('00000003','000000C',getdate(),3000000),
+	('00000004','000000D',getdate(),4000000),
+	('00000005','000000E',getdate(),5000000)
+GO
+
+SELECT * FROM NhanVien
+SELECT * FROM PhongBan
+SELECT * FROM LuongDA
+GO
+
+SELECT * FROM NhanVien WHERE GioiTinh = 'F'
+GO
+
+SELECT MaDA FROM LuongDA
+GO
+
+SELECT MaNV,SUM(SoTien) AS 'TongLuong' FROM LuongDA GROUP BY MaNV
+GO
+
+SELECT * FROM NhanVien WHERE MaPB = '00000A2'
+GO
+
+SELECT SUM(SoTien) AS 'MucLuong', FROM LuongDA WHERE MaNV IN (SELECT MaNV FROM NhanVien WHERE MaPB LIKE '00000A3')
